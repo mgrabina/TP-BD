@@ -1,8 +1,9 @@
 ------------------------- Parte B --------------------------------
+$contador_actor$ LANGUAGE plpgsql;
 -- Funcion incrementa para el trigger
 
 CREATE FUNCTION incrementa(id_nuevo integer)
-returns null
+returns trigger as $contador_actor$
 DECLARE 
         cantAnterior integer
 BEGIN  
