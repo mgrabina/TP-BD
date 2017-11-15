@@ -1,3 +1,4 @@
+------------------- PARTE B ----------------------------------
 --/
 DROP trigger IF EXISTS contador_actor ON actua;
 /
@@ -20,8 +21,17 @@ BEGIN
 END;$$
 LANGUAGE plpgsql;
 /
+
+CREATE TRIGGER contador_actor  
+AFTER INSERT OR UPDATE ON actua
+FOR EACH ROW
+EXECUTE PROCEDURE incrementa();
+/
 --/
-CREATE OR REPLACE FUNCTION INSERTA_DATOS_PELICULA()
+
+---------------------- PARTE C ----------------------------------
+-- PELICULA
+CREATE OR REPLACE FUNCTION inserta_datos_pelicula()
 RETURNS VOID AS $$
 BEGIN  
         INSERT INTO pelicula
@@ -67,5 +77,37 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql; 
 /
+/drop function inserta_datos_pertenece
+--/
+CREATE or replace FUNCTION inserta_datos_pertenece()
+returns VOID AS $$
+DECLARE
+        s film%rowtype;
+        r record;              -- Variables auxiliares para iterar
+        t record;
+        j record;
+        pai integer;
+        paises integer[];
+BEGIN         
+        -- PERTENECE
+        FOR s IN (SELECT * FROM film)
+        LOOP    -- Por cada pelicula con sus id_country's almacenamos sus paises y los procesamos
+                
+                paises = ARRAY[s.id_country1,s.id_country2,s.id_country3,s.id_country4,s.id_country5,s.id_country6,s.id_country7,s.id_country8];                
+                FOREACH pai  IN ARRAY paises  -- Foreach es a partir de postgresql 9.1
+                LOOP
+                        if(pai != 0)THEN -- Si tal pais existe lo agregamos
+                                if((select id_country from pais where pai = id_country) is not null and (select id_country from pertenece where id_country = pai and id_film = s.id_film ) is null)THEN    -- Se inserta unicamente si ya existia el country
+                                        INSERT INTO pertenece
+                                        VALUES ( s.id_film,pai);
+                                END IF;         
+                        END IF;        
+                END LOOP;
+        END LOOP; 
+        RAISE NOTICE 'Pertenece insertadas.';               
+END 
+$$ LANGUAGE plpgsql; 
+/
+
 
 
