@@ -1,5 +1,5 @@
 --/
-DROP trigger contador_actor ON actua;
+DROP trigger IF EXISTS contador_actor ON actua;
 /
 --/
 CREATE OR REPLACE FUNCTION incrementa() RETURNS trigger AS $$
@@ -9,12 +9,12 @@ BEGIN
         SELECT cantidad_films
                 into cantAnterior 
         FROM actor 
-        WHERE NEW.id = actor.id_actor; 
+        WHERE NEW.id_actor = actor.id_actor; 
         
         UPDATE actor
-        SET cantidad_films = cantAnterior + 1
-        WHERE NEW.id = actor.id_actor ;         
-        RAISE NOTICE 'Valor actualizado en id: %', id_nuevo;
+        SET actor.cantidad_films = cantAnterior + 1
+        WHERE NEW.id_actor = actor.id_actor ;         
+        RAISE NOTICE 'Valor actualizado en id: %', NEW.id_actor;
         RETURN NEW;
  
 END;$$
