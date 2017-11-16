@@ -2,6 +2,7 @@
 --/
 DROP trigger IF EXISTS contador_actor ON actua;
 /
+
 --/
 CREATE OR REPLACE FUNCTION incrementa() RETURNS trigger AS $$
 DECLARE
@@ -11,6 +12,9 @@ BEGIN
                 into cantAnterior 
         FROM actor 
         WHERE NEW.id_actor = actor.id_actor; 
+        if cantAnterior is null then
+                cantAnterior=0;
+        END IF;
         
         UPDATE actor
         SET actor.cantidad_films = cantAnterior + 1
@@ -27,9 +31,10 @@ AFTER INSERT OR UPDATE ON actua
 FOR EACH ROW
 EXECUTE PROCEDURE incrementa();
 /
---/
+
 
 ---------------------- PARTE C ----------------------------------
+--/
 -- PELICULA
 CREATE OR REPLACE FUNCTION inserta_datos_pelicula()
 RETURNS VOID AS $$
@@ -42,7 +47,8 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;   
 /
-/drop function inserta_datos_dirige
+
+--DIRIGE
 --/
 CREATE or replace FUNCTION inserta_datos_dirige()
 returns VOID AS $$
@@ -77,7 +83,9 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql; 
 /
-/drop function inserta_datos_pertenece
+
+
+--PERTENECE
 --/
 CREATE or replace FUNCTION inserta_datos_pertenece()
 returns VOID AS $$
