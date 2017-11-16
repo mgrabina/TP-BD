@@ -83,13 +83,6 @@ END
 $$ LANGUAGE plpgsql; 
 /
 
-<<<<<<< HEAD
-        -- PERTENECE
-/drop function inserta_datos_pertenece
-=======
-
---PERTENECE
->>>>>>> origin/master
 --/
 CREATE or replace FUNCTION inserta_datos_pertenece()
 returns VOID AS $$
@@ -122,7 +115,6 @@ $$ LANGUAGE plpgsql;
 
 
         -- Actor y actua
-/drop function inserta_datos_actores
 --/
 CREATE or replace FUNCTION inserta_datos_actores()
 returns VOID AS $$
@@ -166,4 +158,26 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql; 
 /
-select inserta_datos_actores();
+
+--/ 
+drop function if exists inserta_datos();
+/
+
+--/
+CREATE OR REPLACE FUNCTION insertar_datos()
+RETURNS trigger AS $$
+BEGIN 
+        PERFORM inserta_datos_pelicula(),inserta_datos_dirige(),inserta_datos_pertenece(),inserta_datos_actores();
+END;
+$$ LANGUAGE plpgsql; 
+/
+--/
+DROP trigger IF EXISTS normalizar_tablas ON film;
+--/
+CREATE TRIGGER normalizar_tablas  
+AFTER INSERT OR UPDATE ON film
+FOR EACH ROW
+EXECUTE PROCEDURE insertar_datos();
+/
+
+
