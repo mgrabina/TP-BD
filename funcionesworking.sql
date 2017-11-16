@@ -166,7 +166,7 @@ drop function if exists inserta_datos();
 --/
 CREATE OR REPLACE FUNCTION insertar_datos()
 RETURNS trigger AS $$
-BEGIN 
+BEGIN   
         PERFORM inserta_datos_pelicula(),inserta_datos_dirige(),inserta_datos_pertenece(),inserta_datos_actores();
         RETURN NEW;
 END;
@@ -179,6 +179,26 @@ CREATE TRIGGER normalizar_tablas
 AFTER INSERT OR UPDATE ON film
 FOR EACH ROW
 EXECUTE PROCEDURE insertar_datos();
+/
+--/
+DROP trigger IF EXISTS Before_Insert_film ON film;
+/
+--/ 
+CREATE TRIGGER Before_Insert_film
+BEFORE INSERT ON film
+FOR EACH ROW
+EXECUTE PROCEDURE check_datos();
+/
+--/
+CREATE OR REPLACE FUNCTION check_datos()
+RETURNS trigger AS $$
+BEGIN   
+         IF (EXISTS(SELECT id_film FROM film WHERE id_film = NEW.id_film)) THEN
+                RETURN NULL;
+         END IF;
+         RETURN NEW;
+END;
+$$ LANGUAGE plpgsql; 
 /
 
 
