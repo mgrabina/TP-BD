@@ -13,9 +13,8 @@ BEGIN
         WHERE NEW.id_actor = actor.id_actor; 
         
         UPDATE actor
-        SET actor.cantidad_films = cantAnterior + 1
+        SET cantidad_films = cantAnterior + 1
         WHERE NEW.id_actor = actor.id_actor ;         
-        RAISE NOTICE 'Valor actualizado en id: %', NEW.id_actor;
         RETURN NEW;
  
 END;$$
@@ -77,6 +76,8 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql; 
 /
+
+        -- PERTENECE
 /drop function inserta_datos_pertenece
 --/
 CREATE or replace FUNCTION inserta_datos_pertenece()
@@ -89,7 +90,6 @@ DECLARE
         pai integer;
         paises integer[];
 BEGIN         
-        -- PERTENECE
         FOR s IN (SELECT * FROM film)
         LOOP    -- Por cada pelicula con sus id_country's almacenamos sus paises y los procesamos
                 
@@ -110,4 +110,49 @@ $$ LANGUAGE plpgsql;
 /
 
 
-
+        -- Actor y actua
+/drop function inserta_datos_actores
+--/
+CREATE or replace FUNCTION inserta_datos_actores()
+returns VOID AS $$
+DECLARE
+        s film%rowtype;
+        casting text[];
+        act text;
+        id_ult integer;
+        id integer;
+BEGIN         
+        id_ult = (SELECT max(id_actor) from ACTOR) + 1; 
+        if(id_ult is null)then
+                id_ult = 0;
+        end if;
+        FOR s IN (SELECT * from film)  -- Por cada pelicula con su cast
+        LOOP
+                casting = regexp_split_to_array(s.cast_ , ','); 
+                FOREACH act in ARRAY casting
+                LOOP
+                        if(act != '' and length(act) > 0)then
+                                -- ACTOR
+                                id = (SELECT id_actor FROM actor WHERE lower(trim(nombre)) = lower(trim(act))); 
+                                if(id is null) then
+                                       INSERT INTO ACTOR
+                                        VALUES(id_ult, lower(trim(act)), 0);             -- Inserto como nuevo actor si no existia
+                                        id = id_ult;
+                                        id_ult = id_ult + 1;                                       
+                                end if;
+                                 
+                                -- ACTUA
+                                if((select id_film from actua where id_film = s.id_film and id_actor = id) is null)then
+                                        INSERT INTO ACTUA
+                                        VALUES(id, s.id_film);
+                                end if;
+                       end if;
+                END LOOP;
+                casting = ARRAY['']; 
+        END LOOP; 
+  
+        RAISE NOTICE 'Actores y actua insertadas.';               
+END 
+$$ LANGUAGE plpgsql; 
+/
+select inserta_datos_actores();
