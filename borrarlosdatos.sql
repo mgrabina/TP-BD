@@ -1,0 +1,1 @@
+truncate actor,actua,director,dirige,film,pais,pelicula,pertenece cascade;

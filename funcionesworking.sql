@@ -168,6 +168,7 @@ CREATE OR REPLACE FUNCTION insertar_datos()
 RETURNS trigger AS $$
 BEGIN 
         PERFORM inserta_datos_pelicula(),inserta_datos_dirige(),inserta_datos_pertenece(),inserta_datos_actores();
+        RETURN NEW;
 END;
 $$ LANGUAGE plpgsql; 
 /
