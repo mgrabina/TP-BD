@@ -194,6 +194,7 @@ CREATE OR REPLACE FUNCTION check_datos()
 RETURNS trigger AS $$
 BEGIN   
          IF (EXISTS(SELECT id_film FROM film WHERE id_film = NEW.id_film)) THEN
+                raise notice "Id repetido: %", new.id_film;
                 RETURN NULL;
          END IF;
          RETURN NEW;
