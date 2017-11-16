@@ -1,7 +1,6 @@
 ------------------- PARTE B ----------------------------------
 --/
 DROP trigger IF EXISTS contador_actor ON actua;
-/
 
 --/
 CREATE OR REPLACE FUNCTION incrementa() RETURNS trigger AS $$
@@ -23,13 +22,12 @@ BEGIN
  
 END;$$
 LANGUAGE plpgsql;
-/
 
 CREATE TRIGGER contador_actor  
 AFTER INSERT OR UPDATE ON actua
 FOR EACH ROW
 EXECUTE PROCEDURE incrementa();
-/
+
 
 
 ---------------------- PARTE C ----------------------------------
@@ -45,7 +43,7 @@ BEGIN
         where id_film NOT IN( SELECT DISTINCT id_film from pelicula);
 END;
 $$ LANGUAGE PLPGSQL;   
-/
+
 
 --DIRIGE
 --/
@@ -77,11 +75,10 @@ BEGIN
                                 END IF;         
                         END IF;        
                 END LOOP;
-        END LOOP; 
-        RAISE NOTICE 'Dirige insertadas.';               
+        END LOOP;                
 END 
 $$ LANGUAGE plpgsql; 
-/
+
 
 --/
 CREATE or replace FUNCTION inserta_datos_pertenece()
@@ -107,11 +104,10 @@ BEGIN
                                 END IF;         
                         END IF;        
                 END LOOP;
-        END LOOP; 
-        RAISE NOTICE 'Pertenece insertadas.';               
+        END LOOP;                
 END 
 $$ LANGUAGE plpgsql; 
-/
+
 
 
         -- Actor y actua
@@ -152,45 +148,24 @@ BEGIN
                        end if;
                 END LOOP;
                 casting = ARRAY['']; 
-        END LOOP; 
-  
-        RAISE NOTICE 'Actores y actua insertadas.';               
+        END LOOP;              
 END 
 $$ LANGUAGE plpgsql; 
-/
 
---/ 
-drop function if exists inserta_datos();
-/
 
 --/
 CREATE OR REPLACE FUNCTION insertar_datos()
-RETURNS trigger AS $$
+RETURNS VOID AS $$
 BEGIN   
         PERFORM inserta_datos_pelicula(),inserta_datos_dirige(),inserta_datos_pertenece(),inserta_datos_actores();
-        RETURN NEW;
 END;
 $$ LANGUAGE plpgsql; 
-/
---/
-DROP trigger IF EXISTS normalizar_tablas ON film;
---/
-CREATE TRIGGER normalizar_tablas  
-AFTER INSERT OR UPDATE ON film
-FOR EACH ROW
-EXECUTE PROCEDURE insertar_datos();
-/
---/
-DROP trigger IF EXISTS Before_Insert_film ON film;
-/
+
+
 --/ 
-CREATE TRIGGER Before_Insert_film
-BEFORE INSERT ON film
-FOR EACH ROW
-EXECUTE PROCEDURE check_datos();
-/
+
 --/
-CREATE OR REPLACE FUNCTION check_datos()
+CREATE OR REPLACE FUNCTION check_datos_film()
 RETURNS trigger AS $$
 BEGIN   
          IF (EXISTS(SELECT id_film FROM film WHERE id_film = NEW.id_film)) THEN
@@ -200,6 +175,50 @@ BEGIN
          RETURN NEW;
 END;
 $$ LANGUAGE plpgsql; 
-/
 
 
+
+--/
+CREATE OR REPLACE FUNCTION check_datos_director()
+RETURNS trigger AS $$
+BEGIN   
+         IF (EXISTS(SELECT id_director FROM director WHERE id_director = NEW.id_director)) THEN
+                RETURN NULL;
+         END IF;
+         RETURN NEW;
+END;
+$$ LANGUAGE plpgsql; 
+
+
+--/
+CREATE OR REPLACE FUNCTION check_datos_pais()
+RETURNS trigger AS $$
+BEGIN   
+         IF (EXISTS(SELECT id_country FROM pais WHERE id_country = NEW.id_country)) THEN
+                RETURN NULL;
+         END IF;
+         RETURN NEW;
+END;
+$$ LANGUAGE plpgsql; 
+
+--/
+DROP trigger IF EXISTS Before_Insert_film ON film;
+--/
+DROP trigger IF EXISTS Before_Insert_pais ON pais;
+--/
+DROP trigger IF EXISTS Before_Insert_directores ON director;
+
+CREATE TRIGGER Before_Insert_film
+BEFORE INSERT ON film
+FOR EACH ROW
+EXECUTE PROCEDURE check_datos_film();
+
+CREATE TRIGGER Before_Insert_pais
+BEFORE INSERT ON pais
+FOR EACH ROW
+EXECUTE PROCEDURE check_datos_pais();
+
+CREATE TRIGGER Before_Insert_directores
+BEFORE INSERT ON director
+FOR EACH ROW
+EXECUTE PROCEDURE check_datos_director();
